@@ -28,7 +28,7 @@ class PDFService {
                       style: pw.TextStyle(
                           fontSize: 18, fontWeight: pw.FontWeight.bold)),
                   pw.Text(DateTime.now().toString().substring(0, 16),
-                      style: const TextStyle(fontSize: 12)),
+                      style: const pw.TextStyle(fontSize: 12)),
                 ],
               ),
               pw.Divider(thickness: 2),
