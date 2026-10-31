@@ -1,6 +1,3 @@
-name: shamtur_scan
-description: Shamtur Scan Application
-
 name: Build Flutter APK
 
 on:
