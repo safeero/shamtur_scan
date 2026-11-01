@@ -2,13 +2,102 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const ShamturScanApp());
 }
 
-class ShamturScanApp extends StatelessWidget {
+// مدير اللغات والتطبيق البسيط
+class AppLocale {
+  static String currentLang = 'ar'; // ar, tr, en
+
+  static Map<String, Map<String, String>> translations = {
+    'ar': {
+      'app_title': 'شامتور سكان - فحص السيارات',
+      'bluetooth': 'الاتصال بالـ OBD2',
+      'subscription': 'الاشتراكات والترخيص',
+      'electric': 'سيارة كهربائية (EV)',
+      'hybrid': 'هجين (Hybrid)',
+      'fuel': 'وقود (Fuel)',
+      'start_scan': 'بدء فحص الأعطال الشامل',
+      'scanning': 'جاري فحص أنظمة السيارة...',
+      'scan_history': 'سجل الفحص والتشخيص:',
+      'no_faults': 'النظام نظيف وآمن. اضغط على بدء الفحص للبحث عن الأخطاء.',
+      'trial_active': 'الفترة التجريبية نشطة (متبقي: ',
+      'days': 'أيام)',
+      'trial_expired': 'انتهت الفترة التجريبية. يرجى الاشتراك لتفعيل التطبيق.',
+      'bank_title': 'التحويل البنكي المعتمد',
+      'bank_name': 'البنك / الحساب:',
+      'iban': 'رقم الـ IBAN:',
+      'holder': 'المستفيد: BAKRI ALLABABIDI',
+      'receipt_hint': 'أدخل رقم إيصال التحويل البنكي هنا',
+      'submit_receipt': 'إرسال الإيصال لتفعيل الاشتراك',
+      'success_msg': 'تم إرسال طلب التفعيل بنجاح وسيتم مراجعته.',
+    },
+    'tr': {
+      'app_title': 'Shamtur Scan - Araç Teşhis',
+      'bluetooth': 'OBD2 Bağlantısı',
+      'subscription': 'Abonelikler',
+      'electric': 'Elektrikli (EV)',
+      'hybrid': 'Hibrit (Hybrid)',
+      'fuel': 'Benzin/Dizel (Fuel)',
+      'start_scan': 'Kapsamlı Arıza Taraması Başlat',
+      'scanning': 'Sistemler taranıyor...',
+      'scan_history': 'Teşhis Geçmişi:',
+      'no_faults': 'Sistem temiz. Hata aramak için taramayı başlatın.',
+      'trial_active': 'Deneme Sürümü Aktif (Kalan: ',
+      'days': ' gün)',
+      'trial_expired': 'Deneme süresi sona erdi. Lütfen abone olun.',
+      'bank_title': 'Banka Havalesi Bilgileri',
+      'bank_name': 'Banka / Hesap:',
+      'iban': 'IBAN Numarası:',
+      'holder': 'Alıcı: BAKRI ALLABABIDI',
+      'receipt_hint': 'Banka dekont numarasını girin',
+      'submit_receipt': 'Aboneliği Aktifleştirmek İçin Gönder',
+      'success_msg': 'Abonelik talebiniz başarıyla gönderildi.',
+    },
+    'en': {
+      'app_title': 'Shamtur Scan - HUD Diagnostics',
+      'bluetooth': 'OBD2 Connection',
+      'subscription': 'Subscriptions',
+      'electric': 'Electric (EV)',
+      'hybrid': 'Hybrid',
+      'fuel': 'Fuel',
+      'start_scan': 'Start Comprehensive Scan',
+      'scanning': 'Scanning vehicle systems...',
+      'scan_history': 'Diagnostics History:',
+      'no_faults': 'System is clean. Tap start scan to check faults.',
+      'trial_active': 'Free Trial Active (Remaining: ',
+      'days': ' days)',
+      'trial_expired': 'Trial expired. Please subscribe to continue.',
+      'bank_title': 'Bank Transfer Details',
+      'bank_name': 'Bank:',
+      'iban': 'IBAN:',
+      'holder': 'Beneficiary: BAKRI ALLABABIDI',
+      'receipt_hint': 'Enter bank transfer receipt / reference number',
+      'submit_receipt': 'Submit Receipt for Activation',
+      'success_msg': 'Activation request submitted successfully.',
+    }
+  };
+
+  static String get(String key) {
+    return translations[currentLang]?[key] ?? key;
+  }
+}
+
+class ShamturScanApp extends StatefulWidget {
   const ShamturScanApp({super.key});
+
+  @override
+  State<ShamturScanApp> createState() => _ShamturScanAppState();
+}
+
+class _ShamturScanAppState extends State<ShamturScanApp> {
+  void changeLanguage(String lang) {
+    setState(() {
+      AppLocale.currentLang = lang;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +115,7 @@ class ShamturScanApp extends StatelessWidget {
         ),
         fontFamily: 'Roboto',
       ),
-      home: const HolographicDashboard(),
+      home: HolographicDashboard(onLanguageChanged: changeLanguage),
     );
   }
 }
@@ -35,7 +124,8 @@ class ShamturScanApp extends StatelessWidget {
 // 1. لوحة التحكم الرئيسية (HUD Dashboard)
 // ==========================================
 class HolographicDashboard extends StatefulWidget {
-  const HolographicDashboard({super.key});
+  final Function(String) onLanguageChanged;
+  const HolographicDashboard({super.key, required this.onLanguageChanged});
 
   @override
   State<HolographicDashboard> createState() => _HolographicDashboardState();
@@ -44,52 +134,80 @@ class HolographicDashboard extends StatefulWidget {
 class _HolographicDashboardState extends State<HolographicDashboard> {
   String selectedVehicleType = 'electric';
   bool isScanningActive = false;
-  List<String> detectedFaults = []; // تبدأ فارغة حقيقةً ولا توجد أعطال وهمية
+  List<String> detectedFaults = [];
+  int remainingTrialDays = 3;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFreeTrial();
+  }
+
+  // التحقق من فترة التجربة المجانية (3 أيام)
+  void _checkFreeTrial() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? installTime = prefs.getInt('install_timestamp');
+    
+    if (installTime == null) {
+      installTime = DateTime.now().millisecondsSinceEpoch;
+      await prefs.setInt('install_timestamp', installTime);
+    }
+
+    int differenceDays = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(installTime)).inDays;
+    int remaining = 3 - differenceDays;
+
+    setState(() {
+      remainingTrialDays = remaining > 0 ? remaining : 0;
+    });
+  }
 
   void _startRealDiagnostics() async {
+    if (remainingTrialDays <= 0) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const SubscriptionScreen()));
+      return;
+    }
+
     setState(() {
       isScanningActive = true;
       detectedFaults.clear();
     });
 
-    // محاكاة الاتصال الفعلي بالمعالج (هنا سيتم استقبال الأكواد الحقيقية من OBD2 مستقبلاً)
     await Future.delayed(const Duration(seconds: 3));
 
     setState(() {
       isScanningActive = false;
-      // إذا لم تكن القطعة موصولة، نعطي تنبيه حقيقي للمستخدم
       detectedFaults.add('تنبيه: لم يتم رصد وحدة OBD2 متصلة. يرجى ربط القطعة أولاً.');
     });
   }
 
-  @mainNavigation
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A192F),
-        title: const Text('SHAMTUR SCAN - PRO HUD',
-            style: TextStyle(color: Color(0xFF00F2FE), fontSize: 16, letterSpacing: 1.2)),
+        title: Text(AppLocale.get('app_title'),
+            style: const TextStyle(color: Color(0xFF00F2FE), fontSize: 14, letterSpacing: 1.1)),
         actions: [
+          // قائمة تغيير اللغات
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.language, color: Color(0xFF00F2FE)),
+            onSelected: (lang) {
+              widget.onLanguageChanged(lang);
+              setState(() {});
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'ar', child: Text('العربية')),
+              const PopupMenuItem(value: 'tr', child: Text('Türkçe')),
+              const PopupMenuItem(value: 'en', child: Text('English')),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.bluetooth, color: Color(0xFF00F2FE)),
-            tooltip: 'إدارة الاتصال',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const OBDConnectionScreen()),
-              );
-            },
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OBDConnectionScreen())),
           ),
           IconButton(
             icon: const Icon(Icons.card_membership, color: Color(0xFF00FF87)),
-            tooltip: 'الاشتراكات',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SubscriptionScreen()),
-              );
-            },
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SubscriptionScreen())),
           ),
         ],
       ),
@@ -98,44 +216,60 @@ class _HolographicDashboardState extends State<HolographicDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // اختيار نوع المركبة
+            // شريط حالة الفترة التجريبية
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0A192F),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: remainingTrialDays > 0 ? const Color(0xFF00FF87) : Colors.redAccent),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(remainingTrialDays > 0 ? Icons.timer : Icons.lock, color: remainingTrialDays > 0 ? const Color(0xFF00FF87) : Colors.redAccent),
+                  const SizedBox(width: 8),
+                  Text(
+                    remainingTrialDays > 0 
+                        ? '${AppLocale.get('trial_active')}$remainingTrialDays ${AppLocale.get('days')}'
+                        : AppLocale.get('trial_expired'),
+                    style: TextStyle(color: remainingTrialDays > 0 ? const Color(0xFF00FF87) : Colors.redAccent, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 15),
+
+            // خيارات نوع المركبة
             Row(
               children: [
-                _buildVehicleTypeChip('سيارة كهربائية (EV)', 'electric'),
+                _buildVehicleTypeChip(AppLocale.get('electric'), 'electric'),
                 const SizedBox(width: 8),
-                _buildVehicleTypeChip('هجين (Hybrid)', 'hybrid'),
+                _buildVehicleTypeChip(AppLocale.get('hybrid'), 'hybrid'),
                 const SizedBox(width: 8),
-                _buildVehicleTypeChip('وقود (Fuel)', 'fuel'),
+                _buildVehicleTypeChip(AppLocale.get('fuel'), 'fuel'),
               ],
             ),
             const SizedBox(height: 20),
 
-            // زر بدء الفحص الحقيقي
             Center(
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF00F2FE),
                   foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: isScanningActive ? null : _startRealDiagnostics,
                 icon: isScanningActive
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                      )
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
                     : const Icon(Icons.radar),
-                label: Text(
-                  isScanningActive ? 'جاري فحص أنظمة السيارة...' : 'بدء فحص الأعطال الشامل',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
+                label: Text(isScanningActive ? AppLocale.get('scanning') : AppLocale.get('start_scan'),
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 20),
 
-            // منطقة عرض النتائج الواقعية
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(15),
@@ -147,26 +281,21 @@ class _HolographicDashboardState extends State<HolographicDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('سجل الفحص والتشخيص:',
-                        style: TextStyle(color: Color(0xFF00F2FE), fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(AppLocale.get('scan_history'),
+                        style: const TextStyle(color: Color(0xFF00F2FE), fontWeight: FontWeight.bold)),
                     const Divider(color: Colors.white24),
                     Expanded(
                       child: detectedFaults.isEmpty
-                          .isEmpty
-                          ? const Center(
-                              child: Text(
-                                'النظام نظيف وآمن. اضغط على "بدء فحص الأعطال الشامل" للبحث عن الأخطاء.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white54, fontSize: 14),
-                              ),
+                          ? Center(
+                              child: Text(AppLocale.get('no_faults'),
+                                  textAlign: TextAlign.center, style: const TextStyle(color: Colors.white54, fontSize: 13)),
                             )
                           : ListView.builder(
                               itemCount: detectedFaults.length,
                               itemBuilder: (context, index) {
                                 return ListTile(
                                   leading: const Icon(Icons.info_outline, color: Colors.amberAccent),
-                                  title: Text(detectedFaults[index],
-                                      style: const TextStyle(color: Colors.white, fontSize: 14)),
+                                  title: Text(detectedFaults[index], style: const TextStyle(color: Colors.white, fontSize: 13)),
                                 );
                               },
                             ),
@@ -185,7 +314,7 @@ class _HolographicDashboardState extends State<HolographicDashboard> {
     bool isSelected = selectedVehicleType == type;
     return Expanded(
       child: ChoiceChip(
-        label: Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11)),
+        label: Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10)),
         selected: isSelected,
         selectedColor: const Color(0xFF00F2FE).withOpacity(0.3),
         backgroundColor: const Color(0xFF0A192F),
@@ -201,7 +330,7 @@ class _HolographicDashboardState extends State<HolographicDashboard> {
 }
 
 // ==========================================
-// 2. نظام الاتصال الحقيقي بالبلوتوث (OBD2) مع إدارة الصلاحيات
+// 2. شاشة اتصال البلوتوث (OBD2)
 // ==========================================
 class OBDConnectionScreen extends StatefulWidget {
   const OBDConnectionScreen({super.key});
@@ -219,46 +348,39 @@ class _OBDConnectionScreenState extends State<OBDConnectionScreen> {
     setState(() {
       _isScanning = true;
       _scanResults.clear();
-      _statusMessage = 'جاري التحقق من حالة البلوتوث والأذونات...';
+      _statusMessage = 'جاري التحقق من البلوتوث والأذونات...';
     });
 
     try {
-      // التحقق من تشغيل البلوتوث
       bool isAdapterOn = await FlutterBluePlus.adapterState.first == BluetoothAdapterState.on;
       if (!isAdapterOn) {
         setState(() {
-          _statusMessage = 'خطأ: يرجى تشغيل البلوتوث في إعدادات الهاتف أولاً.';
+          _statusMessage = 'خطأ: يرجى تشغيل البلوتوث في إعدادات الهاتف.';
           _isScanning = false;
         });
         return;
       }
 
-      setState(() {
-        _statusMessage = 'جاري البحث عن قطع الـ OBD2 (ELM327)...';
-      });
-
-      // الاستماع للنتائج المكتشفة
       FlutterBluePlus.scanResults.listen((results) {
         setState(() {
           _scanResults = results;
         });
       });
 
-      // بدء البحث لمدة 7 ثوانٍ
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 7));
       
       setState(() {
         _isScanning = false;
         if (_scanResults.isEmpty) {
-          _statusMessage = 'لم يتم العثور على أجهزة قريبة. تأكد من تشغيل السلف/السيارة ووجود القطعة.';
+          _statusMessage = 'لم يتم العثور على أجهزة. تأكد من تشغيل السيارة ووجود القطعة.';
         } else {
-          _statusMessage = 'تم اكتشاف الأجهزة التالية بنجاح:';
+          _statusMessage = 'تم اكتشاف الأجهزة التالية:';
         }
       });
     } catch (e) {
       setState(() {
         _isScanning = false;
-        _statusMessage = 'حدث خطأ أثناء البحث: $e (تأكد من إذن الموقع والبلوتوث)';
+        _statusMessage = 'خطأ في البحث: $e';
       });
     }
   }
@@ -267,7 +389,7 @@ class _OBDConnectionScreenState extends State<OBDConnectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إدارة الاتصال بقطعة الفحص', style: TextStyle(color: Color(0xFF00F2FE))),
+        title: Text(AppLocale.get('bluetooth'), style: const TextStyle(color: Color(0xFF00F2FE))),
         backgroundColor: const Color(0xFF0A192F),
       ),
       body: Padding(
@@ -297,7 +419,7 @@ class _OBDConnectionScreenState extends State<OBDConnectionScreen> {
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00F2FE), foregroundColor: Colors.black),
               onPressed: _isScanning ? null : _startBluetoothScan,
               icon: const Icon(Icons.search),
-              label: Text(_isScanning ? 'جاري البحث...' : 'بحث عن أجهزة OBD2 عبر البلوتوث'),
+              label: Text(_isScanning ? 'جاري البحث...' : 'بحث عن قطع OBD2'),
             ),
             const SizedBox(height: 20),
             Expanded(
@@ -321,13 +443,9 @@ class _OBDConnectionScreenState extends State<OBDConnectionScreen> {
                         onPressed: () async {
                           try {
                             await result.device.connect();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('تم الاتصال بنجاح بقطعة الفحص!')),
-                            );
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الاتصال بنجاح!')));
                           } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('فشل الاتصال: $e')),
-                            );
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل الاتصال: $e')));
                           }
                         },
                         child: const Text('اتصال'),
@@ -345,7 +463,7 @@ class _OBDConnectionScreenState extends State<OBDConnectionScreen> {
 }
 
 // ==========================================
-// 3. نظام الاشتراكات الحقيقي (مع التحقق والتحويل البنكي)
+// 3. شاشة الاشتراكات وتفاصيل حسابك البنكي الثابت
 // ==========================================
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
@@ -361,7 +479,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   void _submitBankTransfer() {
     if (_receiptController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الرجاء إدخال رقم إيصال التحويل البنكي أو اسم الحساب!')),
+        const SnackBar(content: Text('الرجاء إدخال رقم إيصال التحويل البنكي!')),
       );
       return;
     }
@@ -370,18 +488,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       _requestSent = true;
     });
 
-    // هنا يتم إرسال الطلب فعلياً للسيرفر أو الوكيل للمراجعة
     Future.delayed(const Duration(seconds: 2), () {
       if (!mounted) return;
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: const Color(0xFF0A192F),
-          title: const Text('تم إرسال طلب التفعيل', style: TextStyle(color: Color(0xFF00FF87))),
-          content: const Text(
-            'تم إرسال بيانات التحويل بنجاح إلى إدارة الوكيل. سيتم مراجعة الإيصال وتفعيل اشتراكك خلال مدة قصيرة.',
-            style: TextStyle(color: Colors.white70),
-          ),
+          title: const Text('تم إرسال الطلب', style: TextStyle(color: Color(0xFF00FF87))),
+          Text(AppLocale.get('success_msg'), style: const TextStyle(color: Colors.white70)),
           actions: [
             TextButton(
               onPressed: () {
@@ -400,7 +514,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('باقات الاشتراكات والترخيص', style: TextStyle(color: Color(0xFF00F2FE))),
+        title: Text(AppLocale.get('subscription'), style: const TextStyle(color: Color(0xFF00F2FE))),
         backgroundColor: const Color(0xFF0A192F),
       ),
       body: SingleChildScrollView(
@@ -408,51 +522,47 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'اختر باقة التشخيص الاحترافية:',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 15),
-            
-            // بطاقة الباقة الشهرية
+            // بطاقة حسابك البنكي الثابتة والمعتمدة
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: const Color(0xFF0A192F),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF00F2FE), width: 1.5),
+                border: Border.all(color: const Color(0xFF00FF87), width: 1.5),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('الباقة الشهرية (PRO)', style: TextStyle(color: Color(0xFF00F2FE), fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(AppLocale.get('bank_title'),
+                      style: const TextStyle(color: Color(0xFF00FF87), fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  const Text('المستفيد: BAKRI ALLABABIDI',
+                      style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('فحص شامل للسيارات الكهربائية والتقليدية + قراءة مسح الأعطال المتقدمة.', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                  const SizedBox(height: 15),
-                  const Text('\$15 / شهرياً', style: TextStyle(color: Color(0xFF00FF87), fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text('رقم الـ IBAN:', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black45,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const SelectableText(
+                      'TR610001001119866870265001',
+                      style: TextStyle(color: Color(0xFF00F2FE), fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 25),
 
-            // قسم الدفع عبر التحويل البنكي الحقيقي
-            const Text(
-              'تفعيل الاشتراك عبر التحويل البنكي للوكيل:',
-              style: TextStyle(color: Color(0xFF00FF87), fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'قم بالتحويل لحساب الوكيل المعتمد، ثم أدخل رقم الإيصال أو مرجع التحويل أدناه:',
-              style: TextStyle(color: Colors.white60, fontSize: 12),
-            ),
-            const SizedBox(height: 15),
-
             TextField(
               controller: _receiptController,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                labelText: 'رقم الإيصال أو مرجع التحويل البنكي',
-                labelStyle: const TextStyle(color: Colors.white70),
+                labelText: AppLocale.get('receipt_hint'),
+                labelStyle: const TextStyle(color: Colors.white70, fontSize: 13),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: Colors.cyan),
@@ -478,8 +588,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 ),
                 onPressed: _requestSent ? null : _submitBankTransfer,
                 child: Text(
-                  _requestSent ? 'جاري مراجعة الطلب...' : 'إرسال إيصال التحويل لتفعيل الاشتراك',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  _requestSent ? 'جاري المعالجة...' : AppLocale.get('submit_receipt'),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
             ),
