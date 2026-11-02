@@ -526,7 +526,7 @@ class _ConnectionManagerScreenState extends State<ConnectionManagerScreen> with 
                                 await result.device.connect();
                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الاتصال بنجاح عبر البلوتوث!')));
                               } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل الاتصال: \$e')));
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل الاتصال: $e')));
                               }
                             },
                             child: const Text('اتصال'),
@@ -650,4 +650,90 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                Navigator.
+                Navigator.pop(context);
+              },
+              child: const Text('حسناً', style: TextStyle(color: Color(0xFF00F2FE))),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppLocale.get('subscription'), style: const TextStyle(color: Color(0xFF00F2FE))),
+        backgroundColor: const Color(0xFF0A192F),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0A192F),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF00FF87), width: 1.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(AppLocale.get('bank_title'),
+                      style: const TextStyle(color: Color(0xFF00FF87), fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  const Text('المستفيد: BAKRI ALLABABIDI',
+                      style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text('رقم الـ IBAN:', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(6)),
+                    child: const SelectableText(
+                      'TR610001001119866870265001',
+                      style: TextStyle(color: Color(0xFF00F2FE), fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 25),
+            TextField(
+              controller: _receiptController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: AppLocale.get('receipt_hint'),
+                labelStyle: const TextStyle(color: Colors.white70, fontSize: 13),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.cyan)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00FF87), width: 2)),
+                filled: true,
+                fillColor: const Color(0xFF0A192F),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00FF87),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: _requestSent ? null : _submitBankTransfer,
+                child: Text(
+                  _requestSent ? 'جاري المعالجة...' : AppLocale.get('submit_receipt'),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
