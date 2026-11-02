@@ -25,12 +25,10 @@ jobs:
         flutter-version: '3.16.x'
         channel: 'stable'
 
-    # إذا كان مشروعك موجوداً في مجلد فرعي، استبدل "." باسم المجلد (مثلاً: subfolder)
-    # أما إذا كان مشروعك في الجذر ولكن مفقود، فتأكد أن ملف pubspec.yaml مرفوع في مستودع GitHub
     - name: Install Dependencies
       run: flutter pub get
-      working-directory: . 
+      working-directory: shamtur_scan
 
     - name: Build APK
       run: flutter build apk --release
-      working-directory: .
+      working-directory: shamtur_scan
