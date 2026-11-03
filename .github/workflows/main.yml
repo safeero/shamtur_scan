@@ -19,7 +19,7 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-   - name: Set up Flutter
+    - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.22.x'
@@ -27,7 +27,6 @@ jobs:
 
     - name: Locate Project and Build APK
       run: |
-        # البحث عن المجلد الذي يحتوي على pubspec.yaml والانتقال إليه تلقائياً
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         if [ -z "$PUB_PATH" ]; then
           echo "Error: pubspec.yaml not found!"
