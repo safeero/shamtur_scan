@@ -25,14 +25,8 @@ jobs:
         flutter-version: '3.16.x'
         channel: 'stable'
 
-    - name: Install Dependencies
-      run: flutter pub get
-      defaults:
-        run:
-          working-directory: ./shamtur_scan
-
-    - name: Build APK
-      run: flutter build apk --release
-      defaults:
-        run:
-          working-directory: ./shamtur_scan
+    - name: Install Dependencies and Build APK
+      run: |
+        cd shamtur_scan
+        flutter pub get
+        flutter build apk --release
