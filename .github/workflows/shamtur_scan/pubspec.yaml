@@ -4,22 +4,7 @@ description: Shamtur Scan Application
 environment:
   sdk: '^3.13.0'
 
-dependencies:import 'package:url_launcher/url_launcher.dart';
-
-// دالة فتح البريد أو الواتساب بشكل صحيح بدون شاشات فارغة
-void _openSupportContact() async {
-  final Uri emailUri = Uri(
-    scheme: 'mailto',
-    path: 'safeero180@gmail.com',
-    query: 'subject=تفعيل اشتراك شامتور سكان&body=مرحباً، لقد قمت بالتحويل البنكي وهذا هو رقم الإيصال:',
-  );
-
-  if (await canLaunchUrl(emailUri)) {
-    await launchUrl(emailUri);
-  } else {
-    // إذا لم يكن هناك تطبيق بريد، يمكنك توجيهه للواتساب مباشرة كبديل احترافي
-    final Uri whatsappUri = Uri.parse('https://wa.me/?text=مرحباً، أريد تفعيل اشتراكي في شامتور سكان');
-    a
+dependencies:
   flutter:
     sdk: flutter
   flutter_blue_plus: ^1.35.5
