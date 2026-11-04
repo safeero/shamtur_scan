@@ -1,46 +1,65 @@
 name: Build Flutter App
 
-on: 
-push: 
-branches: [ main ] 
-pull_request: 
-branches: [ main ]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-jobs: 
-build: 
-runs-on:ubuntu-latest 
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-steps: 
-- uses: actions/checkout@v4 
+    steps:
+    - uses: actions/checkout@v4
 
--name: Set up Java 
-uses: actions/setup-java@v3 
-with: 
-distribution: 'zulu' 
-java-version: '17' 
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
 
--name: Set up Flutter 
-uses: subosito/flutter-action@v2 
-with: 
-flutter-version: '3.24.3' 
-channel: 'stable' 
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.3'
+        channel: 'stable'
 
--name: Final Clean & Build APK 
-run: | 
-PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
-PROJECT_DIR=$(dirname "$PUB_PATH")
-cd "$PROJECT_DIR"
-
-# 1. Update the Bluetooth package to a modern 2.x version to avoid fetching the broken 7.0.4 version
-flutter pub add flutter_blue_plus:^2.3.14
-
-# 2. Do not delete the Android directory, ensuring the existing Flutter 3.24 structure remains intact
-flutter pub get
-flutter build apk --release
-0 commit comments
-Comments
-0
-(0)
-Comment
-You're not receiving notifications from this thread.
-إرسال ملاحظات
+    - name: Ultimate Fix, Patch & Build APK
+      run: |
+        PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
+        if [ -z "$PUB_PATH" ]; then
+          echo "Error: pubspec.yaml not found!"
+          exit 1
+        fi
+        PROJECT_DIR=$(dirname "$PUB_PATH")
+        cd "$PROJECT_DIR"
+        
+        echo "Found project at: $PROJECT_DIR"
+        
+        # 1. حذف ملف القفل القديم ومجلد الأندرويد تماماً لتفريغ أي مخلفات
+        rm -f pubspec.lock
+        rm -rf android
+        
+        # 2. تعديل ملف pubspec.yaml برمجياً لرفع نسخة البلوتوث للإصدار الحديث 2.x المتوافق مع Gradle
+        python3 -c '
+        import re
+        with open("pubspec.yaml", "r") as f:
+            content = f.read()
+        
+        # تحديث حزمة البلوتوث للإصدار الحديث
+        if "flutter_blue_plus:" in content:
+            content = re.sub(r"flutter_blue_plus:\s*.*", "flutter_blue_plus: ^2.3.14", content)
+        else:
+            content += "\n  flutter_blue_plus: ^2.3.14\n"
+            
+        with open("pubspec.yaml", "w") as f:
+            f.write(content)
+        '
+        
+        # 3. إنشاء بيئة أندرويد جديدة ونظيفة متوافقة 100% مع فلاتر الحديث
+        flutter create --platforms=android .
+        
+        # 4. جلب الحزم وبناء ملف الـ APK النهائي بنجاح
+        flutter pub get
+        flutter build apk --release
