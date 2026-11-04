@@ -25,22 +25,15 @@ jobs:
         flutter-version: '3.24.3'
         channel: 'stable'
 
-    - name: Clean Cache and Build APK
+    - name: Final Clean & Build APK
       run: |
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         PROJECT_DIR=$(dirname "$PUB_PATH")
         cd "$PROJECT_DIR"
         
-        # 1. تدمير ملف القفل القديم لإجبار النظام على التخلص من النسخ المكسورة
-        rm -f pubspec.lock
+        # 1. تحديث حزمة البلوتوث لنسخة 2.x الحديثة بالكامل لمنع جلب النسخة 7.0.4 التالفة
+        flutter pub add flutter_blue_plus:^2.3.14
         
-        # 2. تنظيف كاش الـ pub لتفريغ أي مخلفات قديمة
-        flutter pub cache clean -f
-        
-        # 3. إعادة إنشاء مجلد أندرويد نظيف متوافق مع Gradle الحديث
-        rm -rf android
-        flutter create --platforms=android .
-        
-        # 4. جلب الحزم النظيفة وبناء الـ APK النهائي
+        # 2. عدم حذف مجلد الأندرويد لكي نترك هيكل فلاتر 3.24 السليم يعمل بدون تكسير
         flutter pub get
         flutter build apk --release
