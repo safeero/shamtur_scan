@@ -1,46 +1,46 @@
 name: Build Flutter App
 
-on:
-push:
+on: 
+push: 
+branches: [ main ] 
+pull_request: 
 branches: [ main ]
-pull_request:
-branches: [ main ]
 
-jobs:
-build:
-runs-on: ubuntu-latest
+jobs: 
+build: 
+runs-on:ubuntu-latest 
 
-steps:
-- uses: actions/checkout@v4
+steps: 
+- uses: actions/checkout@v4 
 
-- name: Set up Java
-uses: actions/setup-java@v3
-with:
-distribution: 'zulu'
-java-version: '17'
+-name: Set up Java 
+uses: actions/setup-java@v3 
+with: 
+distribution: 'zulu' 
+java-version: '17' 
 
-- name: Set up Flutter
-uses: subosito/flutter-action@v2
-with:
-flutter-version: '3.24.3'
-channel: 'stable'
+-name: Set up Flutter 
+uses: subosito/flutter-action@v2 
+with: 
+flutter-version: '3.24.3' 
+channel: 'stable' 
 
-- name: Clean Cache and Build APK
+-name: Final Clean & Build APK 
 run: | 
 PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
 PROJECT_DIR=$(dirname "$PUB_PATH")
 cd "$PROJECT_DIR"
 
-# 1. Remove the old lock file to ensure a fresh dependency resolution
-rm -f pubspec.lock
+# 1. Update the Bluetooth package to a modern 2.x version to avoid fetching the broken 7.0.4 version
+flutter pub add flutter_blue_plus:^2.3.14
 
-# 2. Clean the pub cache to remove any stale artifacts
-flutter pub cache clean -f
-
-# 3. Recreate a clean Android directory compatible with modern Gradle
-rm -rf android
-flutter create --platforms=android . 
-
-# 4. Fetch fresh dependencies and build the final APK
+# 2. Do not delete the Android directory, ensuring the existing Flutter 3.24 structure remains intact
 flutter pub get
 flutter build apk --release
+0 commit comments
+Comments
+0
+(0)
+Comment
+You're not receiving notifications from this thread.
+إرسال ملاحظات
