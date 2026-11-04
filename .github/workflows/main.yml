@@ -63,3 +63,9 @@ jobs:
         # 4. جلب الحزم وبناء ملف الـ APK النهائي بنجاح
         flutter pub get
         flutter build apk --release
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: shamtur-scan-app
+        path: "**/*.apk"
