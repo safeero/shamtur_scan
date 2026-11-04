@@ -22,10 +22,10 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.22.x'
+        flutter-version: '3.19.6'
         channel: 'stable'
 
-    - name: Resolve Dependencies and Build APK
+    - name: Fix Android Gradle and Build APK
       run: |
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         if [ -z "$PUB_PATH" ]; then
@@ -35,8 +35,12 @@ jobs:
         PROJECT_DIR=$(dirname "$PUB_PATH")
         cd "$PROJECT_DIR"
         
-        # تخفيض الحزمة برمجياً لتتوافق مع فلاتر 3.22 دون أخطاء
-        flutter pub add shared_preferences:^2.2.3
+        # 1. حذف مجلد الأندرويد القديم بالكامل
+        rm -rf android
         
+        # 2. إنشاء مجلد أندرويد جديد ونظيف متوافق تماماً مع فلاتر 3.19.6
+        flutter create --platforms=android .
+        
+        # 3. جلب الحزم وبناء ملف الـ APK النهائي
         flutter pub get
         flutter build apk --release
