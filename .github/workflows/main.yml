@@ -22,10 +22,10 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.24.x'
+        flutter-version: '3.19.6' # إصدار مستقر يتوافق تماماً مع مجلد الأندرويد لديك
         channel: 'stable'
 
-    - name: Locate, Clean, Upgrade and Build APK
+    - name: Fix Dependencies and Build APK
       run: |
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         if [ -z "$PUB_PATH" ]; then
@@ -36,14 +36,8 @@ jobs:
         echo "Found project at: $PROJECT_DIR"
         cd "$PROJECT_DIR"
         
-        # 1. حذف مجلد الأندرويد القديم بالكامل لتجنب تضارب الملفات
-        rm -rf android
+        # تخفيض هذه الحزمة فقط برمجياً لتجنب الحاجة لفلاتر 3.24
+        flutter pub add shared_preferences:^2.2.0
         
-        # 2. إنشاء مجلد أندرويد جديد ونظيف 100% متوافق مع الإصدار الحديث
-        flutter create --platforms=android .
-        
-        # 3. الترقية الإجبارية لجميع الحزم
-        flutter pub upgrade --major-versions
-        
-        # 4. بناء ملف الـ APK النهائي
+        flutter pub get
         flutter build apk --release
