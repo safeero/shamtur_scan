@@ -1,39 +1,46 @@
 name: Build Flutter App
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+push:
+branches: [ main ]
+pull_request:
+branches: [ main ]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+build:
+runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v4
+steps:
+- uses: actions/checkout@v4
 
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'zulu'
-        java-version: '17'
+- name: Set up Java
+uses: actions/setup-java@v3
+with:
+distribution: 'zulu'
+java-version: '17'
 
-    - name: Set up Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.24.3'
-        channel: 'stable'
+- name: Set up Flutter
+uses: subosito/flutter-action@v2
+with:
+flutter-version: '3.24.3'
+channel: 'stable'
 
-    - name: Final Clean & Build APK
-      run: |
-        PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
-        PROJECT_DIR=$(dirname "$PUB_PATH")
-        cd "$PROJECT_DIR"
-        
-        # 1. تحديث حزمة البلوتوث لنسخة 2.x الحديثة بالكامل لمنع جلب النسخة 7.0.4 التالفة
-        flutter pub add flutter_blue_plus:^2.3.14
-        
-        # 2. عدم حذف مجلد الأندرويد لكي نترك هيكل فلاتر 3.24 السليم يعمل بدون تكسير
-        flutter pub get
-        flutter build apk --release
+- name: Clean Cache and Build APK
+run: | 
+PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
+PROJECT_DIR=$(dirname "$PUB_PATH")
+cd "$PROJECT_DIR"
+
+# 1. Remove the old lock file to ensure a fresh dependency resolution
+rm -f pubspec.lock
+
+# 2. Clean the pub cache to remove any stale artifacts
+flutter pub cache clean -f
+
+# 3. Recreate a clean Android directory compatible with modern Gradle
+rm -rf android
+flutter create --platforms=android . 
+
+# 4. Fetch fresh dependencies and build the final APK
+flutter pub get
+flutter build apk --release
