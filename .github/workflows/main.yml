@@ -25,23 +25,29 @@ jobs:
         flutter-version: '3.19.6'
         channel: 'stable'
 
-    - name: Resolve Dependencies and Build APK
+    - name: Resolve Path, Inject Version & Build APK
       run: |
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
-        if [ -z "$PUB_PATH" ]; then
-          echo "Error: pubspec.yaml not found!"
-          exit 1
-        fi
         PROJECT_DIR=$(dirname "$PUB_PATH")
-        cd "$PROJECT_DIR"
         
-        # 1. ضبط الحزم المتعارضة فقط
+        # 1. نقل المشروع بالكامل إلى مجلد آمن لتجنب أخطاء الجرادل مع المسار المخفي (.github)
+        SAFE_DIR=$GITHUB_WORKSPACE/safe_build
+        mkdir -p $SAFE_DIR
+        cp -a "$PROJECT_DIR/." $SAFE_DIR/
+        cd $SAFE_DIR
+        
+        # 2. إضافة سطر الإصدار تلقائياً إذا كان مفقوداً لمنع خطأ (Null Substring)
+        if ! grep -q "^version:" pubspec.yaml; then
+          echo "version: 1.0.0+1" >> pubspec.yaml
+        fi
+        
+        # 3. ضبط الحزم المتوافقة
         flutter pub add shared_preferences:^2.2.0 printing:^5.12.0
         
-        # 2. إنشاء بيئة أندرويد متوافقة تماماً مع فلاتر 3.19.6 وحزمة البلوتوث الحالية
+        # 4. إعادة إنشاء بيئة أندرويد نظيفة ومستقرة
         rm -rf android
         flutter create --platforms=android .
         
-        # 3. جلب الحزم وبناء ملف الـ APK النهائي
+        # 5. جلب الحزم وبناء ملف الـ APK النهائي
         flutter pub get
         flutter build apk --release
