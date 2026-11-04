@@ -25,15 +25,22 @@ jobs:
         flutter-version: '3.24.3'
         channel: 'stable'
 
-    - name: Fix Gradle & Build APK
+    - name: Final Build APK
       run: |
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         PROJECT_DIR=$(dirname "$PUB_PATH")
         cd "$PROJECT_DIR"
         
-        # حل مشكلة Gradle نهائياً بتحديث مجلد الأندرويد ليطابق فلاتر 3.24
+        # 1. حذف ملف القفل القديم لإجبار فلاتر على جلب أحدث وأصح نسخ متوافقة
+        rm -f pubspec.lock
+        
+        # 2. ترقية حزمة البلوتوث لنسخة حديثة تدعم Gradle الجديد
+        flutter pub add flutter_blue_plus:^1.32.12
+        
+        # 3. إعادة توليد مجلد أندرويد نظيف متوافق
         rm -rf android
         flutter create --platforms=android .
         
+        # 4. جلب الحزم وبناء التطبيق النهائي
         flutter pub get
         flutter build apk --release
