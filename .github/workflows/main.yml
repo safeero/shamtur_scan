@@ -62,7 +62,7 @@ jobs:
         
         # 4. جلب الحزم وبناء ملف الـ APK النهائي بنجاح
         flutter pub get
-        flutter build apk --release
+        flutter build apk --debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
