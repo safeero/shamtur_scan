@@ -19,10 +19,10 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    - name: Set up Flutter
+    - name: Set up Flutter (الإصدار الحديث المتوافق مع شروط الحزم)
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.19.6'
+        flutter-version: '3.24.3'
         channel: 'stable'
 
     - name: Build APK Clean
@@ -31,6 +31,5 @@ jobs:
         PROJECT_DIR=$(dirname "$PUB_PATH")
         cd "$PROJECT_DIR"
         
-        # لا تعديل على ملف pubspec، دعه كما هو، فقط قم بجلب الاعتمادات والبناء
         flutter pub get
         flutter build apk --release
