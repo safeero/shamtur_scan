@@ -13,32 +13,26 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Java
+    - name: Set up Java 11 (متوافق مع Gradle القديم لمشروعك)
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '11'
 
-    - name: Set up Flutter
+    - name: Set up Flutter 3.13.9 (البيئة الأصلية المستقرة لمشروعك)
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.22.x'
+        flutter-version: '3.13.9'
         channel: 'stable'
 
-    - name: Build APK
+    - name: Build APK directly
       run: |
-        # العثور على المشروع والانتقال إليه
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         PROJECT_DIR=$(dirname "$PUB_PATH")
         cd "$PROJECT_DIR"
         
-        # ترقية مكتبة البلوتوث لحل مشكلة Gradle نهائياً
-        flutter pub add flutter_blue_plus:^2.3.14
+        # إعادة الاعتمادات لنسخها المستقرة التي لا تسبب أخطاء
+        flutter pub add shared_preferences:^2.2.0 printing:^5.11.1
         
-        # تجديد ملفات الأندرويد لتتوافق مع الإصدار الحديث
-        rm -rf android
-        flutter create --platforms=android .
-        
-        # جلب الحزم وبناء التطبيق
         flutter pub get
         flutter build apk --release
