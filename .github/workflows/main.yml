@@ -25,7 +25,7 @@ jobs:
         flutter-version: '3.19.6'
         channel: 'stable'
 
-    - name: Finalize Dependencies and Build APK
+    - name: Resolve Dependencies and Build APK
       run: |
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         if [ -z "$PUB_PATH" ]; then
@@ -35,16 +35,13 @@ jobs:
         PROJECT_DIR=$(dirname "$PUB_PATH")
         cd "$PROJECT_DIR"
         
-        # 1. إعداد الإصدارات المتوافقة للحزم الأساسية
+        # 1. ضبط الحزم المتعارضة فقط
         flutter pub add shared_preferences:^2.2.0 printing:^5.12.0
         
-        # 2. ترقية حزمة البلوتوث لنسخة حديثة تتوافق مع مجلد أندرويد الجديد لمنع أخطاء Gradle
-        flutter pub add flutter_blue_plus:^1.38.0
-        
-        # 3. إعادة إنشاء بيئة أندرويد نظيفة
+        # 2. إنشاء بيئة أندرويد متوافقة تماماً مع فلاتر 3.19.6 وحزمة البلوتوث الحالية
         rm -rf android
         flutter create --platforms=android .
         
-        # 4. جلب الحزم وبناء ملف الـ APK النهائي
+        # 3. جلب الحزم وبناء ملف الـ APK النهائي
         flutter pub get
         flutter build apk --release
