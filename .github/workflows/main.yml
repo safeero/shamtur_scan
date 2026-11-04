@@ -19,17 +19,21 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    - name: Set up Flutter (الإصدار الحديث المتوافق مع شروط الحزم)
+    - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.24.3'
         channel: 'stable'
 
-    - name: Build APK Clean
+    - name: Fix Gradle & Build APK
       run: |
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         PROJECT_DIR=$(dirname "$PUB_PATH")
         cd "$PROJECT_DIR"
+        
+        # حل مشكلة Gradle نهائياً بتحديث مجلد الأندرويد ليطابق فلاتر 3.24
+        rm -rf android
+        flutter create --platforms=android .
         
         flutter pub get
         flutter build apk --release
