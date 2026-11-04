@@ -25,19 +25,22 @@ jobs:
         flutter-version: '3.24.3'
         channel: 'stable'
 
-    - name: Final Resolution & Build APK
+    - name: Clean Cache and Build APK
       run: |
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         PROJECT_DIR=$(dirname "$PUB_PATH")
         cd "$PROJECT_DIR"
         
-        # 1. إجبار المشروع على استخدام إصدار بلوتوث مستقر لا يسبب أخطاء Gradle الحديثة
-        flutter pub add flutter_blue_plus:^1.31.3
+        # 1. تدمير ملف القفل القديم لإجبار النظام على التخلص من النسخ المكسورة
+        rm -f pubspec.lock
         
-        # 2. تجديد مجلد الأندرويد ليتوافق مع الإعدادات النظيفة
+        # 2. تنظيف كاش الـ pub لتفريغ أي مخلفات قديمة
+        flutter pub cache clean -f
+        
+        # 3. إعادة إنشاء مجلد أندرويد نظيف متوافق مع Gradle الحديث
         rm -rf android
         flutter create --platforms=android .
         
-        # 3. جلب الحزم وبناء ملف الـ APK النهائي
+        # 4. جلب الحزم النظيفة وبناء الـ APK النهائي
         flutter pub get
         flutter build apk --release
