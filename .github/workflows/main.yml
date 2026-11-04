@@ -25,22 +25,22 @@ jobs:
         flutter-version: '3.24.3'
         channel: 'stable'
 
-    - name: Final Build APK
+    - name: Final Fix & Build APK
       run: |
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         PROJECT_DIR=$(dirname "$PUB_PATH")
         cd "$PROJECT_DIR"
         
-        # 1. حذف ملف القفل القديم لإجبار فلاتر على جلب أحدث وأصح نسخ متوافقة
+        # 1. حذف ملف القفل القديم لإجبار النظام على جلب النسخ الصحيحة
         rm -f pubspec.lock
         
-        # 2. ترقية حزمة البلوتوث لنسخة حديثة تدعم Gradle الجديد
-        flutter pub add flutter_blue_plus:^1.32.12
+        # 2. استخدام الإصدار الصحيح والموجود فعلياً للبلوتوث والذي يدعم فلاتر 3.24
+        flutter pub add flutter_blue_plus:^2.3.14
         
-        # 3. إعادة توليد مجلد أندرويد نظيف متوافق
+        # 3. إعادة إنشاء مجلد أندرويد متوافق ونظيف
         rm -rf android
         flutter create --platforms=android .
         
-        # 4. جلب الحزم وبناء التطبيق النهائي
+        # 4. جلب الحزم وبناء الـ APK بنجاح
         flutter pub get
         flutter build apk --release
