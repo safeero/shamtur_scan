@@ -22,10 +22,10 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.19.6' # إصدار مستقر يتوافق تماماً مع مجلد الأندرويد لديك
+        flutter-version: '3.22.x'
         channel: 'stable'
 
-    - name: Fix Dependencies and Build APK
+    - name: Resolve Dependencies and Build APK
       run: |
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         if [ -z "$PUB_PATH" ]; then
@@ -33,11 +33,10 @@ jobs:
           exit 1
         fi
         PROJECT_DIR=$(dirname "$PUB_PATH")
-        echo "Found project at: $PROJECT_DIR"
         cd "$PROJECT_DIR"
         
-        # تخفيض هذه الحزمة فقط برمجياً لتجنب الحاجة لفلاتر 3.24
-        flutter pub add shared_preferences:^2.2.0
+        # تخفيض الحزمة برمجياً لتتوافق مع فلاتر 3.22 دون أخطاء
+        flutter pub add shared_preferences:^2.2.3
         
         flutter pub get
         flutter build apk --release
