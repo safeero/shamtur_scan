@@ -25,7 +25,7 @@ jobs:
         flutter-version: '3.24.x'
         channel: 'stable'
 
-    - name: Locate, Repair and Build APK
+    - name: Locate, Repair, Upgrade and Build APK
       run: |
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         if [ -z "$PUB_PATH" ]; then
@@ -36,8 +36,11 @@ jobs:
         echo "Found project at: $PROJECT_DIR"
         cd "$PROJECT_DIR"
         
-        # تحديث وإصلاح ملفات الأندرويد لتتوافق مع الإصدار الحديث
+        # 1. تحديث وإصلاح ملفات الأندرويد
         flutter create .
         
-        flutter pub get
+        # 2. الترقية الإجبارية لجميع الحزم لأحدث إصدار متوافق لحل أخطاء Gradle
+        flutter pub upgrade --major-versions
+        
+        # 3. بناء ملف الـ APK النهائي
         flutter build apk --release
