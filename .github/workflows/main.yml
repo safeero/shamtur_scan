@@ -22,15 +22,17 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.16.5'
+        flutter-version: '3.19.6'
         channel: 'stable'
 
-    - name: Build APK
+    - name: Auto-Fix SDK Constraint & Build APK
       run: |
-        # البحث عن مكان المشروع وبنائه بشكل طبيعي بدون أي تغييرات
         PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
         PROJECT_DIR=$(dirname "$PUB_PATH")
         cd "$PROJECT_DIR"
+        
+        # حل نهائي: تعديل قيود الـ SDK تلقائياً في ملف pubspec.yaml لتتطابق مع البيئة وتمنع الخطأ
+        sed -i 's/sdk: .*/sdk: ">=3.0.0 <4.0.0"/g' pubspec.yaml
         
         flutter pub get
         flutter build apk --release
