@@ -596,7 +596,6 @@ class _ConnectionManagerScreenState extends State<ConnectionManagerScreen> with 
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ).wrap(
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00FF87), foregroundColor: Colors.black),
                       onPressed: _isConnectingWifi ? null : _connectViaWifi,
