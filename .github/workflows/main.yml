@@ -1,8 +1,10 @@
-name: Build Flutter APK
+name: Build Flutter App
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
@@ -12,7 +14,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Java
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
         java-version: '17'
@@ -20,31 +22,23 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
+        flutter-version: '3.24.3'
         channel: 'stable'
 
-    - name: Build APK
+    - name: Build APK Clean
       run: |
-        # 1. الدخول للمجلد الصحيح
-        PUB_PATH=$(find . -name "pubspec.yaml" -print -quit)
-        PROJECT_DIR=$(dirname "$PUB_PATH")
-        cd "$PROJECT_DIR"
+        # التأكد من استخدام أوامر flutter الصحيحة حصرياً بدلاً من dart
         
-        # 2. تنظيف وبناء بيئة أندرويد جديدة
+        # 1. إزالة ملف القفل القديم لتجنب التعارض
+        rm -f pubspec.lock
+        
+        # 2. استخدام flutter pub add حصرياً
+        flutter pub add flutter_blue_plus:^2.3.14 shared_preferences:^2.5.3 printing:^5.14.3
+        
+        # 3. إعادة توليد مجلد الأندرويد نظيفاً في الجذر
         rm -rf android
         flutter create --platforms=android .
         
-        # 3. إنشاء ملف الخصائص يدوياً لمنع أخطاء حزمة البلوتوث
-        echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
-        echo "flutter.versionName=1.0.0" >> android/local.properties
-        echo "flutter.versionCode=1" >> android/local.properties
-        echo "flutter.buildMode=debug" >> android/local.properties
-        
-        # 4. جلب الحزم وبناء التطبيق
+        # 4. جلب الحزم وبناء ملف الـ APK النهائي
         flutter pub get
-        flutter build apk --debug
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: shamtur-scan-app
-        path: "**/*.apk"
+        flutter build apk --release
