@@ -1,5 +1,6 @@
-name: shamtur_scan
-description: Shamtur Scan Application
+- name: Run Flutter command
+  working-directory: ./your-flutter-folder
+  run: flutter analyze
 
 environment:
   sdk: '^3.2.0'
